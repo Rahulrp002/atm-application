@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-//import "hardhat/console.sol";
-
 contract Assessment {
     address payable public owner;
     uint256 public balance;
+    string constant PASSWORD = "rahul";
 
     event Deposit(uint256 amount);
-    event Withdraw(uint256 amount);
+    event InterestCalculated(uint256 principle, uint256 rate, uint256 time, uint256 interest);
 
     constructor(uint initBalance) payable {
         owner = payable(msg.sender);
@@ -35,26 +34,25 @@ contract Assessment {
         emit Deposit(_amount);
     }
 
-    // custom error
-    error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
+function withdraw(uint256 _amount) public {
+    // make sure this is the owner
+    require(msg.sender == owner, "You are not the owner of this account");
+    
+    // make sure the balance is sufficient
+    require(_amount <= balance, "Insufficient balance");
 
-    function withdraw(uint256 _withdrawAmount) public {
-        require(msg.sender == owner, "You are not the owner of this account");
-        uint _previousBalance = balance;
-        if (balance < _withdrawAmount) {
-            revert InsufficientBalance({
-                balance: balance,
-                withdrawAmount: _withdrawAmount
-            });
-        }
+    // perform transaction
+    balance -= _amount;
 
-        // withdraw the given amount
-        balance -= _withdrawAmount;
+    // transfer the funds
+    owner.transfer(_amount);
+}
 
-        // assert the balance is correct
-        assert(balance == (_previousBalance - _withdrawAmount));
+    function checkPassword(string memory _password) public pure returns(bool) {
+        return keccak256(abi.encodePacked(_password)) == keccak256(abi.encodePacked(PASSWORD));
+    }
 
-        // emit the event
-        emit Withdraw(_withdrawAmount);
+    function calculateInterest(uint256 _principle, uint256 _rate, uint256 _time) public pure returns(uint256) {
+        return (_principle * _rate * _time) / 100;
     }
 }
